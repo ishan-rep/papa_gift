@@ -9,15 +9,19 @@ let pipes = [];
 let score = 0;
 let gameOver = false;
 const pipeWidth = 40;
-const pipeGap = 185;
+const pipeGap = 225;
 let frameCount = 0;
 let lastTime = 0;
 
 function gameLoop(timestamp) {
     if (gameOver) return;
 
+    if (!lastTime) {
+        lastTime = timestamp;
+    }
     const deltaTime = timestamp - lastTime;
     lastTime = timestamp;
+    console.log(deltaTime); // Let's see what this value is
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
@@ -57,13 +61,14 @@ function drawPipes() {
 }
 
 function updatePipes(deltaTime) {
-    if (frameCount % 100 === 0) {
-        const top = Math.random() * (canvas.height - pipeGap);
-        pipes.push({ x: canvas.width, top: top, bottom: canvas.height - top - pipeGap });
+    if (frameCount % 120 === 0) { // Increase the time between pipe spawns
+        let pipeY = Math.random() * (canvas.height / 2) + (canvas.height / 4);
+        let topPipeHeight = pipeY - pipeGap / 2;
+        pipes.push({ x: canvas.width, top: topPipeHeight, bottom: canvas.height - (topPipeHeight + pipeGap), passed: false });
     }
 
     for (let i = 0; i < pipes.length; i++) {
-        pipes[i].x -= 1.5 * (deltaTime / 16); // Normalize to 60fps
+        pipes[i].x -= 1.7 * (deltaTime / 16); // Normalize to 60fps
 
         if (pipes[i].x + pipeWidth < 0) {
             pipes.splice(i, 1);
@@ -85,9 +90,10 @@ function checkCollisions() {
 
 function updateScore() {
     for (let i = 0; i < pipes.length; i++) {
-        if (pipes[i].x + pipeWidth === bird.x) {
+        if (pipes[i].x + pipeWidth < bird.x && !pipes[i].passed) {
             score++;
             scoreDisplay.textContent = score;
+            pipes[i].passed = true;
             if (score >= 15) {
                 nextButton.style.display = 'block';
                 gameOver = true; // Stop the game
